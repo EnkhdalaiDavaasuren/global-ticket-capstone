@@ -1,4 +1,4 @@
-# Ticket Capstone Constitution (starter draft; human approval required)
+# Ticket Capstone Constitution (approved)
 
 1. Code changes follow approved acceptance criteria and a recorded change request.
 2. Client TSX handles presentation. Workers handle the API and security. D1 holds authoritative inventory and reservations. KV holds public configuration and announcements.
@@ -7,3 +7,10 @@
 5. CI, CD, secrets and production D1 changes require explicit governance and rollback planning.
 6. Never publish sensitive values; evidence must be genuine and redacted.
 7. Agent output is assistance, not approval or verified execution.
+
+## Human approval
+
+- **Status:** Approved
+- **Approved by:** Project owner (@EnkhdalaiDavaasuren)
+- **Date:** November 23, 2026
+- **Basis:** Explicit human approval of the engineering constitution in the capstone review conversation.
