@@ -1,0 +1,10 @@
+[
+  {
+    "key": "config",
+    "value": "{\"siteName\":\"Global Event Tickets\",\"supportedLocales\":[\"en\",\"ko\",\"mn\"]}"
+  },
+  {
+    "key": "announcement",
+    "value": "Welcome to the Global Event Ticket Reservation System"
+  }
+]

@@ -1,0 +1,85 @@
+name: ci-deploy
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      approve_release:
+        description: 'Type APPROVED after instructor confirms backup, D1 bookmark, migration review, and release'
+        required: true
+        default: 'NO'
+permissions:
+  contents: read
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    env:
+      BASE_URL: http://127.0.0.1:8787
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: ${{ hashFiles('package-lock.json') != '' && 'npm' || '' }}
+      # With an instructor-generated lockfile this uses npm ci.
+      # If absent, initial bootstrap uses npm install; commit the resulting lockfile before release.
+      - name: Install dependencies
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install; fi
+      - run: npm run typecheck
+      - run: npm run build
+      - run: npm run test:unit
+      - run: npm run test:ui
+      - name: Create throwaway .dev.vars
+        run: |
+          ADMIN_TOKEN="ci-$(openssl rand -hex 16)"
+          echo "::add-mask::$ADMIN_TOKEN"
+          printf 'ADMIN_TOKEN=%s\n' "$ADMIN_TOKEN" > .dev.vars
+          echo "ADMIN_TOKEN=$ADMIN_TOKEN" >> "$GITHUB_ENV"
+      - run: npm run db:local
+      - run: npm run seed:local
+      - name: Start local Worker
+        run: |
+          npx wrangler dev --port 8787 > wrangler-dev.log 2>&1 &
+          npx tsx scripts/wait-for-worker.ts
+      - run: npm run test:integration
+      - run: npm run test:regression
+      - run: npm run test:concurrency
+      - run: npm run test:security
+      - name: Upload sanitized local diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-local-diagnostics
+          path: wrangler-dev.log
+          retention-days: 7
+  deploy:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.approve_release == 'APPROVED'
+    needs: ci
+    runs-on: ubuntu-latest
+    environment: production # Configure required reviewers in GitHub Settings before enabling this job.
+    permissions:
+      contents: read
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      BASE_URL: ${{ vars.PRODUCTION_BASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: ${{ hashFiles('package-lock.json') != '' && 'npm' || '' }}
+      - name: Install locked release dependencies
+        run: npm ci # Instructor must commit package-lock.json before any production release.
+      - run: npm run typecheck
+      - run: npm run build
+      - name: Apply reviewed remote migrations (requires GitHub protected environment)
+        run: npm run db:remote
+      - name: Deploy Worker + production React assets
+        run: npx wrangler deploy
+      - name: Read-only production smoke
+        run: npm run smoke

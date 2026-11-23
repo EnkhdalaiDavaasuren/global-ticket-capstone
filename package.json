@@ -1,0 +1,51 @@
+{
+  "name": "global-ticket-capstone",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "React + TypeScript and Cloudflare Workers/D1/KV v1.0 classroom starter",
+  "scripts": {
+    "build:client": "esbuild client/main.tsx --bundle --jsx=automatic --format=esm --target=es2022 --minify --outfile=public/assets/app.js",
+    "build": "npm run build:client",
+    "dev:client": "esbuild client/main.tsx --bundle --jsx=automatic --format=esm --target=es2022 --sourcemap --outfile=public/assets/app.js --watch",
+    "generate-types": "wrangler types",
+    "typecheck": "npm run generate-types && tsc -p tsconfig.json && tsc -p client/tsconfig.json && tsc -p tests/tsconfig.json",
+    "dev": "npm run build && wrangler dev --port 8787",
+    "test": "npm run test:unit",
+    "test:unit": "vitest run --project unit",
+    "test:ui": "vitest run --project ui",
+    "test:integration": "vitest run --project integration",
+    "test:regression": "vitest run --project regression",
+    "test:concurrency": "vitest run --project concurrency",
+    "test:security": "vitest run --project security",
+    "smoke": "vitest run --project smoke",
+    "db:local": "wrangler d1 migrations apply ticket-db --local",
+    "db:remote": "wrangler d1 migrations apply ticket-db --remote",
+    "db:seed:local": "wrangler d1 execute ticket-db --local --file=seeds/d1-seed.sql",
+    "db:seed:remote": "wrangler d1 execute ticket-db --remote --file=seeds/d1-seed.sql",
+    "kv:seed:local": "wrangler kv bulk put seeds/kv-seed.json --binding=APP_KV --local",
+    "kv:seed:remote": "wrangler kv bulk put seeds/kv-seed.json --binding=APP_KV --remote",
+    "seed:local": "npm run db:seed:local && npm run kv:seed:local",
+    "deploy": "npm run build && wrangler deploy"
+  },
+  "dependencies": {
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "esbuild": "^0.25.0",
+    "jsdom": "^26.1.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0",
+    "wrangler": "^4.0.0"
+  },
+  "engines": {
+    "node": ">=22 <25"
+  }
+}
