@@ -1,6 +1,6 @@
 # Specification — 001-v1-baseline
 
-**Status:** DRAFT; human approval and real test evidence are not implied.
+**Status:** APPROVED by the project owner on November 23, 2026. Test results remain documented separately as observed evidence.
 
 Purpose: Define the one-seat reservation baseline for instructor review.
 
@@ -16,4 +16,5 @@ Purpose: Define the one-seat reservation baseline for instructor review.
 See the [v1.0 endpoint table](../../README.md#api-endpoints-v10) for the proposed contract and the [browser report](../../docs/browser-test-report.md) for observed behavior.
 
 ## Approved by / date / links
-- Pending
+- Project owner (@EnkhdalaiDavaasuren), November 23, 2026 — explicit human approval in the capstone review conversation.
+- [Verification evidence](../../docs/verification-status.md) and [browser report](../../docs/browser-test-report.md).
