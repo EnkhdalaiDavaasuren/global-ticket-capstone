@@ -1,0 +1,3 @@
+ALTER TABLE reservations
+ADD COLUMN seat_count INTEGER NOT NULL DEFAULT 1
+CHECK (seat_count BETWEEN 1 AND 5);

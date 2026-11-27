@@ -1,8 +1,8 @@
-# Global Event Ticket Reservation System — Full-Stack Starter v1.0
+# Global Event Ticket Reservation System — v1.1
 
 **React + TypeScript (TSX) + CSS · Cloudflare Workers + D1 + KV · GitHub Actions CI/CD · Spec Kit + OpenClaw main-agent project rules + Wiki**
 
-This is an **instructor-prepared v1.0 starter** for the six-session November 23–December 9, 2026 SE Capstone. It implements the proposed API contract and v1.0 React UI described in the attached v5 course handout. The **one-seat limit is intentional**. Upgrade to v1.1 (1–5 seats) **only after approving CHG-001 and creating a feature branch**.
+This branch implements [CHG-001](docs/change-request-CHG-001.md) for the SE Capstone. Customers can book 1–5 seats at once. The `v1.0.0` tag preserves the original single-seat baseline.
 
 Local Lab 0 and Session 1 results are recorded in the [verification log](docs/verification-status.md) and [browser acceptance report](docs/browser-test-report.md).
 
@@ -47,25 +47,25 @@ npm run test:security
 
 Never run write-test projects against production. `tests/helpers/http.ts` blocks non-local creation of test events; production smoke has **GET requests only** and requires an explicitly provided HTTPS `BASE_URL`.
 
-## API endpoints (v1.0)
+## API endpoints (v1.1)
 
 | Method | Path | Expected status / shape |
 |---|---|---|
-| GET | `/api/health` | 200 `{status:'ok', version:'1.0.0'}` |
+| GET | `/api/health` | 200 `{status:'ok', version:'1.1.0'}` |
 | GET | `/api/events` | 200 `{events:[{id,title,startsAt,remainingSeats}]}` |
 | GET | `/api/events/:id` | 200 event, 404 unknown |
 | GET | `/api/config` | 200 public config and announcement (KV) |
-| POST | `/api/reservations` | 201 `{reservationId,cancelToken,seatCount:1}`, 400 invalid, 404 unknown, 409 sold out |
+| POST | `/api/reservations` | 201 `{reservationId,cancelToken,seatCount}`, 400 invalid, 404 unknown, 409 insufficient inventory. Request `seatCount` must be an integer from 1 to 5. |
 | POST | `/api/reservations/:id/cancel` | 200 cancellation, 404 unknown/bad/reused code |
 | POST | `/api/admin/events` | 201 with correct Bearer ADMIN_TOKEN; otherwise 401 |
 
-**No admin credential in browser files.** Cancellation tokens are randomly created once; only SHA-256 hashes are stored. `db.batch()` conditionally decrements stock and inserts a reservation atomically, and conditionally restores one seat on cancellation in v1.0. D1 remains authoritative. The UI never persists private cancellation codes in browser storage.
+**No admin credential in browser files.** Cancellation tokens are randomly created once; only SHA-256 hashes are stored. `db.batch()` conditionally decrements inventory by the requested quantity and inserts the reservation atomically. The first successful cancellation restores the stored quantity. D1 remains authoritative. The UI never persists private cancellation codes in browser storage.
 
 ## Repository purpose
 
 - `client/`, `public/`: React UI and compiled static assets; **do not hand-edit `public/assets/app.js`**.
 - `src/`: Worker HTTP API, authorization, validation, D1 business logic, KV configuration and safe logging.
-- `migrations/0001_initial_v1.sql`: **active baseline schema only**; `seeds/` loads local D1/KV data.
+- `migrations/`: frozen v1.0 schema and the v1.1 seat-count migration. Legacy reservations default to one seat. `seeds/` loads local D1/KV data.
 - `instructor/v1.1-reference/`: **inactive** migration and upgrade steps; intentionally outside `migrations/`.
 - `tests/`: Vitest projects: unit, UI (jsdom), local HTTP integration/regression/concurrency/security, read-only remote smoke.
 - `docs/labs/`: short six-session teaching checkpoints.

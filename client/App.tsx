@@ -8,7 +8,7 @@ import {
 import type { EventView, ReservationReceipt } from './api';
 import { filterEvents } from './search';
 
-const MAX_SEATS = 1; // Frozen v1.0; change to 5 only after approved CHG-001.
+const MAX_SEATS = 5;
 
 type Status = { message: string; error: boolean };
 
