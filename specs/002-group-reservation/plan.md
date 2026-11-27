@@ -1,6 +1,7 @@
 # Implementation Plan — 002-group-reservation
 
-- Confirm actual requirements and dependencies before editing.
-- Plan modifications to TSX/Worker/DB/tests/docs separately.
-- Execute local verification, record real results, review with a human.
-- Release only after the requisite approval and rollback plan.
+- Preserve the `v1.0.0` tag and the first migration. Implement approved CHG-001 on `feature/v1.1-group-reservation`.
+- Extend the existing controlled React quantity field and Worker validation to 1–5. Keep the current request, response, and cancellation routes.
+- Apply migration 0002 locally and verify a v1.0 row receives a quantity of one. Use prepared SQL and atomic D1 batches for quantity-aware inventory updates.
+- Run the unit, UI, and local HTTP suites and exercise the browser against local D1 and KV. Record observed results for review.
+- Review rollback for active group bookings. Production migration and deployment require separate approval.

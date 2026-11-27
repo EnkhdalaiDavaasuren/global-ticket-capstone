@@ -20,7 +20,7 @@ beforeEach(() => {
 });
 afterEach(() => { cleanup(); vi.resetAllMocks(); });
 
-describe('v1.0 React browser', () => {
+describe('v1.1 React browser', () => {
   it('does case-insensitive search and selects event', async () => {
     expect(filterEvents(fixtures, ' CON ')[0].id).toBe('evt-1');
     const u = userEvent.setup(); render(<App />);
@@ -36,29 +36,33 @@ describe('v1.0 React browser', () => {
     await screen.findByRole('button', { name: /<img src=x/ });
     expect(container.querySelector('img')).toBeNull();
   });
-  it('reserves one seat and cancels with the private code', async () => {
+  it('reserves three seats and cancels with the private code', async () => {
     const u = userEvent.setup();
-    vi.mocked(createReservation).mockResolvedValue({ reservationId: 'r-1', cancelToken: 'private', seatCount: 1 });
+    vi.mocked(createReservation).mockResolvedValue({ reservationId: 'r-1', cancelToken: 'private', seatCount: 3 });
     vi.mocked(cancelReservation).mockResolvedValue(undefined);
     render(<App />);
     await u.click(await screen.findByRole('button', { name: /Concert/ }));
     await u.type(screen.getByLabelText('Email'), 'student@example.com');
+    const quantity = screen.getByRole<HTMLInputElement>('spinbutton');
+    expect(quantity.value).toBe('1');
+    await u.clear(quantity);
+    await u.type(quantity, '3');
     await u.click(screen.getByRole('button', { name: /^Reserve$/ }));
     await waitFor(() => expect(createReservation).toHaveBeenCalledWith({
-      eventId: 'evt-1', email: 'student@example.com', seatCount: 1,
+      eventId: 'evt-1', email: 'student@example.com', seatCount: 3,
     }));
-    expect(await screen.findByLabelText('Reservation confirmation')).toBeTruthy();
+    expect((await screen.findByLabelText('Reservation confirmation')).textContent).toContain('Reserved 3 seat(s)');
     await u.click(screen.getByRole('button', { name: /^Cancel reservation$/ }));
     await waitFor(() => expect(cancelReservation).toHaveBeenCalledWith('r-1', 'private'));
     await waitFor(() => expect(screen.queryByLabelText('Reservation confirmation')).toBeNull());
     expect(vi.mocked(getEvents).mock.calls.length).toBeGreaterThanOrEqual(3);
   });
-  it('rejects quantity 3 at v1.0 boundary', async () => {
+  it('rejects quantity 6', async () => {
     const u = userEvent.setup(); render(<App />);
     await u.click(await screen.findByRole('button', { name: /Concert/ }));
     await u.type(screen.getByLabelText('Email'), 'student@example.com');
     await u.clear(screen.getByLabelText(/Number of seats/));
-    await u.type(screen.getByLabelText(/Number of seats/), '3');
+    await u.type(screen.getByLabelText(/Number of seats/), '6');
     // Browser-native min/max constraints may prevent submit before the handler runs.
     expect((screen.getByLabelText(/Number of seats/) as HTMLInputElement).validity.rangeOverflow).toBe(true);
     expect(createReservation).not.toHaveBeenCalled();

@@ -3,7 +3,7 @@ import { logRequest } from './logging';
 import { validateEmail, validateSeatCount, validateEventInput } from './validation';
 import { listEvents, getEvent, createEvent } from './services/events';
 import { getPublicConfig } from './services/config';
-import { reserveOne, cancelOne } from './services/reservations';
+import { reserveSeats, cancelReservation } from './services/reservations';
 import type { AppEnv } from './types';
 
 const json = (payload: unknown, status = 200): Response => new Response(JSON.stringify(payload), {
@@ -29,7 +29,7 @@ function respondMethod(): Response { return fail('Method not allowed', 405); }
 async function route(request: Request, env: AppEnv): Promise<Response> {
   const { pathname } = new URL(request.url);
   const method = request.method.toUpperCase();
-  if (pathname === '/api/health') return method === 'GET' ? json({ status: 'ok', version: '1.0.0' }) : respondMethod();
+  if (pathname === '/api/health') return method === 'GET' ? json({ status: 'ok', version: '1.1.0' }) : respondMethod();
   if (pathname === '/api/events') {
     return method === 'GET' ? json({ events: await listEvents(env) }) : respondMethod();
   }
@@ -58,8 +58,8 @@ async function route(request: Request, env: AppEnv): Promise<Response> {
     const seatCount = validateSeatCount(body.seatCount);
     const cancelToken = newCancelToken();
     const id = `res-${crypto.randomUUID()}`;
-    const outcome = await reserveOne(env, {
-      id, eventId: body.eventId, email, cancelTokenHash: await hashCancelToken(cancelToken),
+    const outcome = await reserveSeats(env, {
+      id, eventId: body.eventId, email, seatCount, cancelTokenHash: await hashCancelToken(cancelToken),
     });
     if (outcome === 'not_found') return fail('Event not found', 404);
     if (outcome === 'sold_out') return fail('Not enough seats available', 409);
@@ -71,7 +71,7 @@ async function route(request: Request, env: AppEnv): Promise<Response> {
     const body = await readBody(request);
     const code = body.cancelToken;
     if (typeof code !== 'string' || !/^[a-f0-9]{32}$/.test(code)) return fail('Reservation not found', 404);
-    const ok = await cancelOne(env, decodeURIComponent(cancel[1]), await hashCancelToken(code));
+    const ok = await cancelReservation(env, decodeURIComponent(cancel[1]), await hashCancelToken(code));
     return ok ? json({ status: 'cancelled' }) : fail('Reservation not found', 404);
   }
   return fail('Route not found', 404);

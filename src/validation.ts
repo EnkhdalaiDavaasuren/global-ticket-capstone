@@ -1,9 +1,7 @@
-// v1.0 baseline deliberately supports ONE seat per reservation.
-// Expand to integers 1..5 in the approved Lab 2 feature branch only.
-export const MAX_SEATS = 1;
+export const MAX_SEATS = 5;
 export function validateSeatCount(value: unknown): number {
-  if (typeof value !== 'number' || !Number.isInteger(value) || value !== 1) {
-    throw new RangeError('seatCount must be exactly 1 in v1.0');
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < 1 || value > MAX_SEATS) {
+    throw new RangeError(`seatCount must be an integer from 1 to ${MAX_SEATS}`);
   }
   return value;
 }
